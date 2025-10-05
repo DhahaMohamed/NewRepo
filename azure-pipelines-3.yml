@@ -1,0 +1,57 @@
+igger:
+  branches:
+    include:
+      - master 
+
+
+stages:
+
+- stage: Build
+  jobs:
+    - job: Build
+  displayName: 'Build job'
+  pool:
+   vmImage: 'windows-latest'
+
+   steps:
+    - task: UseDotNet@
+      inputs:
+        packageType: sdk
+        version: '8.x' 
+      InstalationPath: $(Agent,ToolsDirectory)/dotnet
+
+
+    - script:
+         dotnet build --configuration Release
+      displayName: 'Build Solution'
+
+      
+    - script:
+        dotnet publish -c Release -o $(Build.ArtifactsStagingDirectory)
+      displayName: 'Publish Airtifacts'
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: $(Build.AirtifactStagingDirectory)
+        ArtifactName: drop
+        publishLocation: 'Container'
+
+- stage: Deploy
+  jobs:
+   - deployment: DeployWebApp
+     displayName:  "Deploy to azure app service"
+     environment:  "production"
+     strategy:
+      runOnce:
+        deploy:
+          steps:
+            - download: current
+              artifact: drop 
+
+
+            - task: AzurewebApp@1
+              inputs:
+                azureSubscription: "MindXsite2"
+                appType: 'webApp'
+                appName: 'mindxsite2'
+                package: $(Pipeline.workspace)drop
