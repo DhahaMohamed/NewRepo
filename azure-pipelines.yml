@@ -51,7 +51,7 @@ stages:
 
             - task: AzurewebApp@1
               inputs:
-                azureSubscription: "github-Dhaha Mohamed"
+                azureSubscription: "github_Dhaha Mohamed"
                 appType: 'webApp'
                 appName: 'mindxsite2'
                 package: $(Pipeline.workspace)drop
